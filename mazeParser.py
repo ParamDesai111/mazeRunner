@@ -1,50 +1,62 @@
-import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
-from matplotlib.colors import ListedColormap
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors  # Import the colors module from matplotlib
+import numpy as np
 
-def load_maze_from_csv(filename):
-    maze_data = pd.read_csv(filename)
-    maze = {}
+# def load_maze(csv_file):
+#     """Load maze from a CSV file."""
+#     maze = pd.read_csv(csv_file, header=None)
+#     return maze.values
+
+def load_maze(csv_file):
+    """Load maze from a CSV file."""
+    maze = pd.read_csv(csv_file, header=None)
+    return maze.applymap(lambda x: x.strip() if isinstance(x, str) else x).values
+
+
+def load_dynamic_walls(dynamic_file):
+    """Load dynamic walls from a text file."""
+    dynamic_walls = {}
+    with open(dynamic_file, 'r') as file:
+        for line in file:
+            coord, behavior = line.strip().split(':')
+            x, y = eval(coord.strip())
+            dynamic_walls[(x, y)] = behavior.strip()
+    return dynamic_walls
+
+def visualize_maze(maze, dynamic_walls=None):
+    """Visualize the maze with dynamic walls highlighted."""
+    fig, ax = plt.subplots()
+    colors = {'S': 'green', 'E': 'red', '0': 'white', '1': 'black', 'G': 'blue'}
+    dynamic_color = 'yellow'
     
-    max_row = maze_data['row'].max()
-    max_col = maze_data['col'].max()
-    rows, cols = max_row + 1, max_col + 1
-
-    for _, row in maze_data.iterrows():
-        position = (row['row'], row['col'])
-        maze[position] = {
-            'type': row['type'],
-            'dynamic_change': row.get('dynamic_change', 'static')
-        }
-    return maze, rows, cols
-
-def visualize_maze(maze, rows, cols):
-    # Define the grid and color mapping
-    grid = np.zeros((rows, cols), dtype=int)
+    # Create a color grid
+    color_grid = np.zeros_like(maze, dtype=object)
+    for i in range(maze.shape[0]):
+        for j in range(maze.shape[1]):
+            cell = maze[i, j]
+            color_grid[i, j] = colors.get(cell, 'white')
     
-    # Assign values for each type of cell
-    for (r, c), cell_info in maze.items():
-        cell_type = cell_info['type']
-        if cell_type == 'wall':
-            grid[r, c] = 2  # Black for walls
-        elif cell_type == 'path':
-            grid[r, c] = 1  # White for paths
-        elif cell_type == 'start':
-            grid[r, c] = 3  # Green for start
-        elif cell_type == 'goal':
-            grid[r, c] = 4  # Blue for goal
-        elif cell_type == 'griever':
-            grid[r, c] = 5  # Red for grievers
-
-    # Define a color map for each type
-    cmap = ListedColormap(['white', 'black', 'white', 'green', 'blue', 'red'])
+    # Highlight dynamic walls
+    if dynamic_walls:
+        for (x, y) in dynamic_walls.keys():
+            color_grid[x, y] = dynamic_color
     
-    # Plot the grid with the custom color map
-    plt.imshow(grid, cmap=cmap)
-    plt.colorbar(ticks=[1, 2, 3, 4, 5], label="Cell Types")  # Optional colorbar with labels
+    # Convert colors to RGBA
+    rgba_grid = [[mcolors.to_rgba(c) for c in row] for row in color_grid]
+
+    # Display the maze
+    ax.imshow(rgba_grid, aspect='equal')
+    ax.set_xticks(np.arange(-0.5, maze.shape[1], 1), minor=True)
+    ax.set_yticks(np.arange(-0.5, maze.shape[0], 1), minor=True)
+    ax.grid(which='minor', color='black', linestyle='-', linewidth=0.5)
+    ax.tick_params(which='minor', size=0)
     plt.show()
 
-# Load maze and visualize with custom color mapping
-maze, rows, cols = load_maze_from_csv("csv/file.csv")
-visualize_maze(maze, rows, cols)
+# # Example Usage
+# csv_file = "csv/maze.csv"
+# dynamic_file = "csv/dynamic_walls.txt"
+
+# maze = load_maze(csv_file)
+# dynamic_walls = load_dynamic_walls(dynamic_file)
+# visualize_maze(maze, dynamic_walls)
