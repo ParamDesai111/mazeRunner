@@ -19,10 +19,12 @@ def load_dynamic_walls(dynamic_file):
     dynamic_walls = {}
     with open(dynamic_file, 'r') as file:
         for line in file:
-            coord, behavior = line.strip().split(':')
-            x, y = eval(coord.strip())
-            dynamic_walls[(x, y)] = behavior.strip()
+            trigger, target = line.strip().split(':')
+            trigger = eval(trigger.strip())  # Convert to tuple
+            target = eval(target.strip())   # Convert to tuple
+            dynamic_walls[trigger] = target
     return dynamic_walls
+
 
 def visualize_maze(maze, dynamic_walls=None):
     """Visualize the maze with dynamic walls highlighted."""
@@ -52,6 +54,30 @@ def visualize_maze(maze, dynamic_walls=None):
     ax.grid(which='minor', color='black', linestyle='-', linewidth=0.5)
     ax.tick_params(which='minor', size=0)
     plt.show()
+
+def apply_dynamic_wall_changes(maze, dynamic_walls, visited_cells, triggered_walls):
+    """
+    Apply dynamic wall changes based on the runner's visited cells.
+    
+    :param maze: Current maze as a NumPy array.
+    :param dynamic_walls: Dictionary with trigger and target positions for dynamic walls.
+    :param visited_cells: Set of cells visited by the runner.
+    :param triggered_walls: Set of already moved walls to avoid re-triggering.
+    :return: Updated maze.
+    """
+    changes_made = False  # Track if any changes are made
+    for trigger, target in dynamic_walls.items():
+        if trigger in visited_cells and trigger not in triggered_walls:
+            tx, ty = target
+            # Ensure the target position is valid and unoccupied
+            if maze[tx, ty] == 0:  # Target must be walkable
+                print(f"Moving wall from {trigger} to {target}")
+                maze[tx, ty] = 1   # Move the wall to the target
+                triggered_walls.add(trigger)  # Mark this wall as triggered
+                changes_made = True  # Indicate that a change was made
+    return maze, changes_made
+
+
 
 # # Example Usage
 # csv_file = "csv/maze.csv"

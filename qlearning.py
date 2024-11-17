@@ -1,5 +1,6 @@
 import numpy as np
 import random
+from mazeParser import apply_dynamic_wall_changes
 
 class MazeRunner:
     def __init__(self, maze, start, goal):
@@ -73,18 +74,48 @@ class MazeRunner:
         max_next_q = max(self.q_table[next_state].values()) if next_state in self.q_table else 0
         self.q_table[state][action] += self.alpha * (reward + self.gamma * max_next_q - self.q_table[state][action])
 
-    def train(self, episodes):
-        """Train the agent using Q-learning."""
+    # def train(self, episodes):
+    #     """Train the agent using Q-learning."""
+    #     for episode in range(episodes):
+    #         state = self.start
+    #         while state != self.goal:
+    #             action = self.choose_action(state)
+    #             if not self.is_valid_move(state, action):
+    #                 continue
+    #             next_state = self.get_next_state(state, action)
+    #             reward = self.get_reward(state, next_state)
+    #             self.update_q_value(state, action, reward, next_state)
+    #             state = next_state
+    def train(self, episodes, dynamic_walls):
+        """Train the agent using Q-learning with dynamic wall updates."""
+        visited_cells = set()  # Track visited cells
+        triggered_walls = set()  # Track triggered walls to prevent re-triggering
+
         for episode in range(episodes):
             state = self.start
             while state != self.goal:
+                visited_cells.add(state)  # Mark the cell as visited
+                
+                # Apply dynamic changes based on visited cells
+                self.maze, changes_made = apply_dynamic_wall_changes(
+                    self.maze, dynamic_walls, visited_cells, triggered_walls
+                )
+                if changes_made:
+                    print(f"Episode {episode}: Maze updated due to dynamic walls.")
+
                 action = self.choose_action(state)
                 if not self.is_valid_move(state, action):
                     continue
+
                 next_state = self.get_next_state(state, action)
                 reward = self.get_reward(state, next_state)
                 self.update_q_value(state, action, reward, next_state)
                 state = next_state
+
+                # Debugging log for the current state, action, and reward
+                # print(f"Episode {episode}: State {state}, Action {action}, Reward {reward}")
+
+
 
     def find_path(self):
         """Find the optimal path using the learned Q-table."""

@@ -1,4 +1,5 @@
 import heapq
+from mazeParser import apply_dynamic_wall_changes
 
 class AStar:
     def __init__(self, maze, start, goal):
@@ -52,6 +53,25 @@ class AStar:
                     heapq.heappush(open_set, (f_score[neighbor], tentative_g_score, neighbor))
 
         return None  # No path found
+    def a_star_with_dynamic_changes(self, dynamic_walls, visited_cells):
+        """Perform A* search with dynamic wall updates."""
+        triggered_walls = set()  # Track triggered walls
+        while True:
+            path = self.a_star_search()  # Find initial path
+            if path is None:
+                return None  # No path found
+
+            for step in path:
+                visited_cells.add(step)  # Mark the cell as visited
+                # Apply dynamic changes based on visited cells
+                self.maze, changes_made = apply_dynamic_wall_changes(
+                    self.maze, dynamic_walls, visited_cells, triggered_walls
+                )
+                if changes_made:  # If the environment changes, recompute the path
+                    break
+            else:
+                return path  # Return the path if no changes occurred
+
 
     def reconstruct_path(self, came_from, current):
         """Reconstruct the path from the start to the goal."""
