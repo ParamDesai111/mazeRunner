@@ -72,7 +72,6 @@ class AStar:
             else:
                 return path  # Return the path if no changes occurred
 
-
     def reconstruct_path(self, came_from, current):
         """Reconstruct the path from the start to the goal."""
         path = []
