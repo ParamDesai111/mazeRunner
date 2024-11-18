@@ -1,0 +1,8 @@
+# TODO: add more test cases to see both of the algos running
+# TODO: add dynamic walls to the maze, and test the algorithms with dynamic walls
+    # ! Dynamic walls are a little bit tricky with how to implement them so we might need to go back to the drawing board
+    # ! and think about how to implement them in some way that makes sense
+# TODO: we need to combine the both searches after to find the most optimal path after the dynamic changes, rn they both
+    # run independently with the same output.
+# TODO: we will need to change the visualizer to pygame or tkinter cuz i checked and matplotlib is not good for real time updates when we show the runner moving
+# TODO: Grievers will only have one thing (if close to the runner reward -1000 so it never takes that path)
