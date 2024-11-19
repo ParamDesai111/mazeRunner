@@ -42,7 +42,7 @@ def main():
     print("Testing Q-Learning with Dynamic Walls:")
     runner = MazeRunner(maze_numeric.astype(int), start, goal)
     runner.initialize_q_table()
-    runner.train(episodes=1000, dynamic_walls=dynamic_walls)
+    runner.train(episodes=10000, dynamic_walls=dynamic_walls)
     qlearning_path = runner.find_path()
     print("Path found by Q-Learning:", qlearning_path)
     # Visualize the maze
