@@ -11,7 +11,7 @@ def test_astar(maze, start, goal):
 
 def main():
     # Load the maze and dynamic walls
-    csv_file = "csv/maze2.csv"
+    csv_file = "csv/maze3.csv"
     dynamic_file = "csv/dynamic_walls.txt"
 
     maze = load_maze(csv_file)
