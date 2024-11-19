@@ -39,7 +39,7 @@ def load_dynamic_walls(dynamic_file):
 
 def visualize_maze_live(maze, path, dynamic_walls=None):
     """
-    Visualize the maze in real-time, simulating the agent's path.
+    Visualize the maze in real-time with images, simulating the agent's path.
     
     :param maze: 2D NumPy array representing the maze.
     :param path: List of tuples representing the agent's path.
@@ -49,15 +49,31 @@ def visualize_maze_live(maze, path, dynamic_walls=None):
     window_width = cols * (CELL_SIZE + MARGIN)
     window_height = rows * (CELL_SIZE + MARGIN)
 
-    # Add a new color for the completed path
-    COLORS['PATH_COMPLETED'] = (0, 255, 255)  # Cyan
-
     # Initialize Pygame
     pygame.init()
     screen = pygame.display.set_mode((window_width, window_height))
-    pygame.display.set_caption("Maze Runner Simulation")
+    pygame.display.set_caption("Maze Runner Simulation with Images")
     clock = pygame.time.Clock()
     running = True
+
+    # Load images
+    agent_img = pygame.transform.scale(pygame.image.load("images/agent.png"), (CELL_SIZE, CELL_SIZE))
+    wall_img = pygame.transform.scale(pygame.image.load("images/wall.png"), (CELL_SIZE, CELL_SIZE))
+    griever_img = pygame.transform.scale(pygame.image.load("images/griever.png"), (CELL_SIZE, CELL_SIZE))
+    start_img = pygame.transform.scale(pygame.image.load("images/start.png"), (CELL_SIZE, CELL_SIZE))
+    end_img = pygame.transform.scale(pygame.image.load("images/goal.png"), (CELL_SIZE, CELL_SIZE))
+    floor_img = pygame.transform.scale(pygame.image.load("images/start.png"), (CELL_SIZE, CELL_SIZE))
+    path_highlight_img = pygame.transform.scale(pygame.image.load("images/path_highlight.png"), (CELL_SIZE, CELL_SIZE))
+    dynamic_wall_img = pygame.transform.scale(pygame.image.load("images/dynamic_wall.png"), (CELL_SIZE, CELL_SIZE))
+
+    # Mapping maze characters to images
+    image_mapping = {
+        'S': start_img,
+        'E': end_img,
+        '0': floor_img,
+        '1': wall_img,
+        'G': griever_img,
+    }
 
     # Helper function to draw the maze
     def draw_maze(current_position=None, completed=False):
@@ -71,19 +87,19 @@ def visualize_maze_live(maze, path, dynamic_walls=None):
                     CELL_SIZE
                 )
                 cell_type = str(maze[i, j])
-                color = COLORS.get(cell_type, (255, 255, 255))  # Default: White
-                
+                image = image_mapping.get(cell_type, floor_img)  # Default to floor image
+
                 # Highlight dynamic walls
                 if dynamic_walls and (i, j) in dynamic_walls.keys():
-                    color = COLORS['DYNAMIC']
+                    image = dynamic_wall_img
                 
-                # Highlight the current position or completed path
+                # Highlight the completed path
                 if completed and (i, j) in path:
-                    color = COLORS['PATH_COMPLETED']
+                    image = path_highlight_img
                 elif current_position == (i, j):
-                    color = COLORS['PATH']
+                    image = agent_img
                 
-                pygame.draw.rect(screen, color, rect)
+                screen.blit(image, rect.topleft)
         
         pygame.display.flip()
 
