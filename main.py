@@ -9,11 +9,6 @@ def test_astar(maze, start, goal):
     path = astar.a_star_search()
     print("Path found by A* search:", path)
 
-import numpy as np
-from mazeParser import load_maze, load_dynamic_walls, visualize_maze
-from qlearning import MazeRunner
-from astar import AStar
-
 def main():
     # Load the maze and dynamic walls
     csv_file = "csv/maze.csv"
@@ -48,7 +43,7 @@ def main():
     print("Testing Q-Learning with Dynamic Walls:")
     runner = MazeRunner(maze_numeric.astype(int), start, goal)
     runner.initialize_q_table()
-    runner.train(episodes=1000, dynamic_walls=dynamic_walls)
+    runner.train(episodes=100000, dynamic_walls=dynamic_walls)
     qlearning_path = runner.find_path()
     print("Path found by Q-Learning:", qlearning_path)
 
