@@ -1,5 +1,5 @@
 import numpy as np
-from mazeParser import load_maze, load_dynamic_walls, visualize_maze
+from mazeParser import load_maze, load_dynamic_walls, visualize_maze_live
 from qlearning import MazeRunner
 from astar import AStar
 
@@ -11,14 +11,13 @@ def test_astar(maze, start, goal):
 
 def main():
     # Load the maze and dynamic walls
-    csv_file = "csv/maze.csv"
+    csv_file = "csv/maze3.csv"
     dynamic_file = "csv/dynamic_walls.txt"
 
     maze = load_maze(csv_file)
     dynamic_walls = load_dynamic_walls(dynamic_file)
 
-    # Visualize the maze
-    visualize_maze(maze, dynamic_walls)
+    
 
     # Find the start ('S') and goal ('E') positions
     start = None
@@ -46,6 +45,8 @@ def main():
     runner.train(episodes=100000, dynamic_walls=dynamic_walls)
     qlearning_path = runner.find_path()
     print("Path found by Q-Learning:", qlearning_path)
+    # Visualize the maze
+    visualize_maze_live(maze, qlearning_path, dynamic_walls)
 
     # # A* with dynamic adjustments
     # print("Testing A* with Dynamic Walls:")
