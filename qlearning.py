@@ -11,7 +11,7 @@ class MazeRunner:
         self.goal = goal
         self.q_table = {}
         self.actions = ['up', 'down', 'left', 'right']
-        self.alpha = 0.1  # Learning rate
+        self.alpha = 0.01  # Learning rate
         self.gamma = 0.9  # Discount factor
         self.epsilon = 0.2  # Exploration rate
 
@@ -45,14 +45,14 @@ class MazeRunner:
         if next_state == self.goal:
             return 100  # Reached goal
         elif self.maze[next_state] == -1:  # Griever penalty
-            return -100
+            return -40
         elif self.maze[next_state] == 1:  # Wall penalty
-            return -10
+            return -50
         else:
             # Encourage moving closer to the goal
             dist_before = abs(state[0] - self.goal[0]) + abs(state[1] - self.goal[1])
             dist_after = abs(next_state[0] - self.goal[0]) + abs(next_state[1] - self.goal[1])
-            return 10 if dist_after < dist_before else -1  # Reward closer moves, penalize further ones
+            return 15 if dist_after < dist_before else -1  # Reward closer moves, penalize further ones
 
     def initialize_q_table(self):
         """Initialize the Q-table."""
@@ -126,16 +126,16 @@ class MazeRunner:
 
     def train(self, episodes, dynamic_walls):
         """Train the agent using Q-learning with dynamic wall updates."""
-        visited_cells = set()  # Track visited cells
-        triggered_walls = set()  # Track triggered walls to prevent re-triggering
-
+        visited_cells = set()
+        triggered_walls = set()
+        
         for episode in range(episodes):
             state = self.start
-            print(f"Starting Episode {episode}")
-            steps = 0  # Count steps to prevent infinite loops
-
+            steps = 0
+            self.epsilon = max(0.1, 1 - episode / episodes)  # Gradually decrease exploration rate
+            
             while state != self.goal:
-                visited_cells.add(state)  # Mark the cell as visited
+                visited_cells.add(state)
 
                 # Apply dynamic changes based on visited cells
                 self.maze, changes_made = apply_dynamic_wall_changes(
@@ -143,35 +143,33 @@ class MazeRunner:
                 )
                 if changes_made:
                     print(f"Episode {episode}: Maze updated due to dynamic walls.")
+                    # Reinitialize Q-values for affected states
+                    for i, j in dynamic_walls.values():
+                        if (i, j) in self.q_table:
+                            del self.q_table[(i, j)]
 
-                # Choose the next action
+                # Ensure Q-values exist for the current state
                 if state not in self.q_table:
-                    print(f"No Q-values for state: {state}. Ending episode.")
-                    break  # Exit loop if no Q-values exist
+                    self.q_table[state] = {action: 0 for action in self.actions}
 
                 action = self.choose_action(state)
                 if not self.is_valid_move(state, action):
-                    print(f"Invalid move from state {state}. Skipping step.")
                     continue
 
                 next_state = self.get_next_state(state, action)
 
-                # Detect stuck state (loop or no valid next state)
-                if next_state == state:
-                    # print(f"Stuck at state {state}. Ending episode.")
+                if next_state == state:  # Detect stuck state
                     break
 
-                # Update Q-values
                 reward = self.get_reward(state, next_state)
                 self.update_q_value(state, action, reward, next_state)
 
-                # Move to the next state
                 state = next_state
                 steps += 1
 
                 # Prevent infinite loops by limiting steps per episode
-                if steps > 1000:  # Adjust this limit as needed
-                    print(f"Too many steps in Episode {episode}. Ending episode.")
+                if steps > 1000:
+                    print(f"Episode {episode}: Too many steps. Ending episode.")
                     break
 
 
@@ -200,29 +198,26 @@ class MazeRunner:
             path.append(state)
 
             if state not in self.q_table:
-                # print("No Q-values for state:", state)
+                print(f"State {state} not in Q-table. No path found.")
                 return "No path found."
 
             action = self.choose_best_action(state)
             next_state = self.get_next_state(state, action)
 
             if next_state == state:  # Detect stuck state
-                # print(f"Stuck at {state}. No further moves possible.")
+                print(f"Stuck at {state}. No further moves possible.")
                 return "No path found."
 
             state = next_state
             steps += 1
 
-            # Limit steps to prevent infinite loops
+            # Prevent infinite loops
             if steps > 1000:
-                # print("Too many steps. Ending pathfinding.")
+                print("Too many steps. No path found.")
                 return "No path found."
 
-        if state == self.goal:
-            path.append(self.goal)
-            return path
-
-        return "No path found."
+        path.append(self.goal)
+        return path
 
 
 # Example Usage
