@@ -1,5 +1,5 @@
 
-# Maze Runner Project: README
+# Maze Runner Project
 
 ## Overview
 The Maze Runner project is a Python-based application to solve dynamic mazes using artificial intelligence techniques. It employs Q-learning, artificial life for dynamic wall updates, and rule-based systems for moving obstacles (grievers) to challenge the maze-solving capabilities of an agent.
