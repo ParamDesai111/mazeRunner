@@ -84,54 +84,6 @@ class MazeRunner:
         max_next_q = max(self.q_table[next_state].values()) if next_state in self.q_table else 0
         self.q_table[state][action] += self.alpha * (reward + self.gamma * max_next_q - self.q_table[state][action])
 
-    # def train(self, episodes, dynamic_walls):
-    #     """Train the agent using Q-learning with dynamic wall updates."""
-    #     visited_cells = set()
-    #     triggered_walls = set()
-        
-    #     for episode in range(episodes):
-    #         state = self.start
-    #         steps = 0
-    #         self.epsilon = max(0.1, 1 - episode / episodes)  # Gradually decrease exploration rate
-            
-    #         while state != self.goal:
-    #             visited_cells.add(state)
-
-    #             # Apply dynamic changes based on visited cells
-    #             self.maze, changes_made = apply_dynamic_wall_changes(
-    #                 self.maze, dynamic_walls, visited_cells, triggered_walls
-    #             )
-    #             if changes_made:
-    #                 print(f"Episode {episode}: Maze updated due to dynamic walls.")
-    #                 # Reinitialize Q-values for affected states
-    #                 for i, j in dynamic_walls.values():
-    #                     if (i, j) in self.q_table:
-    #                         del self.q_table[(i, j)]
-
-    #             # Ensure Q-values exist for the current state
-    #             if state not in self.q_table:
-    #                 self.q_table[state] = {action: 0 for action in self.actions}
-
-    #             action = self.choose_action(state)
-    #             if not self.is_valid_move(state, action):
-    #                 continue
-
-    #             next_state = self.get_next_state(state, action)
-
-    #             if next_state == state:  # Detect stuck state
-    #                 break
-
-    #             reward = self.get_reward(state, next_state)
-    #             self.update_q_value(state, action, reward, next_state)
-
-    #             state = next_state
-    #             steps += 1
-
-    #             # Prevent infinite loops by limiting steps per episode
-    #             if steps > 1000:
-    #                 print(f"Episode {episode}: Too many steps. Ending episode.")
-    #                 break
-
     def train(self, episodes, dynamic_walls, grievers):
         """Train the agent using Q-learning with dynamic wall and griever updates."""
         visited_cells = set()
@@ -208,50 +160,3 @@ class MazeRunner:
 
         path.append(self.goal)
         return path
-
-
-# Example Usage
-# maze = np.array([
-#     ['S', 0, 1, 1, 1, 0, 0],
-#     [1, 0, 1, 'G', 0, 1, 1],
-#     [1, 0, 0, 0, 0, 1, 0],
-#     [1, 1, 1, 0, 1, 1, 0],
-#     [0, 0, 1, 0, 0, 0, 'E']
-# ])
-
-# maze = np.array([
-#     [0, 0, 1, 1, 1, 0, 0],  # Use integers for walls (1) and paths (0)
-#     [1, 0, 1, -1, 0, 1, 1],  # Use -1 for grievers
-#     [1, 0, 0, 0, 0, 1, 0],
-#     [1, 1, 1, 0, 0, 1, 0],
-#     [0, 0, 1, -1, 0, 0, 0]    # Goal is at (4, 6)
-# ])
-
-# start = (0, 1)  # Starting position
-# goal = (4, 6)  # Goal position
-
-# maze = np.array([
-#     [1, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0],
-#     [1, 0, 1, -1, 0, 1, 1, 1, 0, 1, 1, 1, 0],
-#     [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
-#     [1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1],
-#     [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1],
-#     [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0],
-#     [0, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0],
-#     [1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0],
-#     [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0],
-#     [1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0],
-#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-#     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]
-# ])
-
-# start = (1, 1)  # Starting position
-# goal = (11, 12)  # Goal position
-
-
-# runner = MazeRunner(maze, start, goal)
-# runner.initialize_q_table()
-# runner.train(episodes=100000)
-
-# path = runner.find_path()
-# print("Path taken by the Maze Runner:", path)

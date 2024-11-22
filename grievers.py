@@ -1,13 +1,6 @@
 import random
 
 def update_griever_positions(grievers, maze):
-    """
-    Move grievers dynamically in the maze.
-    
-    :param grievers: List of current griever positions as (x, y) tuples.
-    :param maze: 2D NumPy array representing the maze.
-    :return: Updated list of griever positions.
-    """
     directions = ['left', 'right']
     new_positions = []
     for griever in grievers:

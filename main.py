@@ -1,16 +1,14 @@
 import numpy as np
 from mazeParser import load_maze, load_dynamic_walls, visualize_maze, visualize_maze_live
 from qlearning import MazeRunner
-from astar import AStar
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
 def parse_grievers(maze):
-    """Identify the initial positions of grievers in the maze."""
     grievers = []
     for i in range(maze.shape[0]):
         for j in range(maze.shape[1]):
-            if maze[i, j] == -1:  # Griever positions are marked as -1
+            if maze[i, j] == -1:
                 grievers.append((i, j))
     return grievers
 
