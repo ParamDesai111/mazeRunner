@@ -268,7 +268,7 @@ def visualize_maze_live(maze, path, dynamic_walls=None, grievers=None):
     # Initialize Pygame
     pygame.init()
     screen = pygame.display.set_mode((window_width, window_height))
-    pygame.display.set_caption("Maze Runner Simulation with Images")
+    pygame.display.set_caption("Maze Runner")
     clock = pygame.time.Clock()
     running = True
 
@@ -365,6 +365,22 @@ def visualize_maze_live(maze, path, dynamic_walls=None, grievers=None):
 
     # Highlight the entire path after completion
     draw_maze(completed=True)
+    font = pygame.font.Font(None, 60)
+    text_surface = font.render("SUCCESSFUL EXIT!", True, (255, 255, 255))  # White text
+    text_rect = text_surface.get_rect(center=(window_width // 2, window_height // 2))
+
+    # Draw a red background for the message
+    background_rect = pygame.Rect(
+        text_rect.left - 10,  # Add some padding
+        text_rect.top - 10,
+        text_rect.width + 20,
+        text_rect.height + 20
+    )
+    pygame.draw.rect(screen, (255, 0, 0), background_rect)  # Red background
+
+    # Blit the text on top of the background
+    screen.blit(text_surface, text_rect)
+    pygame.display.flip()
 
     # Keep the window open until the user closes it
     while running:
