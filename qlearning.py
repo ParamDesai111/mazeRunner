@@ -2,6 +2,7 @@ import numpy as np
 import random
 from mazeParser import apply_dynamic_wall_changes
 from astar import AStar
+from grievers import update_griever_positions
 
 
 class MazeRunner:
@@ -83,83 +84,87 @@ class MazeRunner:
         max_next_q = max(self.q_table[next_state].values()) if next_state in self.q_table else 0
         self.q_table[state][action] += self.alpha * (reward + self.gamma * max_next_q - self.q_table[state][action])
 
-    # def train(self, episodes):
-    #     """Train the agent using Q-learning."""
-    #     for episode in range(episodes):
-    #         state = self.start
-    #         while state != self.goal:
-    #             action = self.choose_action(state)
-    #             if not self.is_valid_move(state, action):
-    #                 continue
-    #             next_state = self.get_next_state(state, action)
-    #             reward = self.get_reward(state, next_state)
-    #             self.update_q_value(state, action, reward, next_state)
-    #             state = next_state
     # def train(self, episodes, dynamic_walls):
     #     """Train the agent using Q-learning with dynamic wall updates."""
-    #     visited_cells = set()  # Track visited cells
-    #     triggered_walls = set()  # Track triggered walls to prevent re-triggering
-
+    #     visited_cells = set()
+    #     triggered_walls = set()
+        
     #     for episode in range(episodes):
     #         state = self.start
+    #         steps = 0
+    #         self.epsilon = max(0.1, 1 - episode / episodes)  # Gradually decrease exploration rate
+            
     #         while state != self.goal:
-    #             visited_cells.add(state)  # Mark the cell as visited
-                
+    #             visited_cells.add(state)
+
     #             # Apply dynamic changes based on visited cells
     #             self.maze, changes_made = apply_dynamic_wall_changes(
     #                 self.maze, dynamic_walls, visited_cells, triggered_walls
     #             )
     #             if changes_made:
     #                 print(f"Episode {episode}: Maze updated due to dynamic walls.")
+    #                 # Reinitialize Q-values for affected states
+    #                 for i, j in dynamic_walls.values():
+    #                     if (i, j) in self.q_table:
+    #                         del self.q_table[(i, j)]
+
+    #             # Ensure Q-values exist for the current state
+    #             if state not in self.q_table:
+    #                 self.q_table[state] = {action: 0 for action in self.actions}
 
     #             action = self.choose_action(state)
     #             if not self.is_valid_move(state, action):
     #                 continue
 
     #             next_state = self.get_next_state(state, action)
+
+    #             if next_state == state:  # Detect stuck state
+    #                 break
+
     #             reward = self.get_reward(state, next_state)
     #             self.update_q_value(state, action, reward, next_state)
+
     #             state = next_state
+    #             steps += 1
 
-                # Debugging log for the current state, action, and reward
-                # print(f"Episode {episode}: State {state}, Action {action}, Reward {reward}")
+    #             # Prevent infinite loops by limiting steps per episode
+    #             if steps > 1000:
+    #                 print(f"Episode {episode}: Too many steps. Ending episode.")
+    #                 break
 
-    def train(self, episodes, dynamic_walls):
-        """Train the agent using Q-learning with dynamic wall updates."""
+    def train(self, episodes, dynamic_walls, grievers):
+        """Train the agent using Q-learning with dynamic wall and griever updates."""
         visited_cells = set()
         triggered_walls = set()
-        
+
         for episode in range(episodes):
             state = self.start
             steps = 0
             self.epsilon = max(0.1, 1 - episode / episodes)  # Gradually decrease exploration rate
-            
+
             while state != self.goal:
                 visited_cells.add(state)
 
-                # Apply dynamic changes based on visited cells
+                # Apply dynamic wall changes
                 self.maze, changes_made = apply_dynamic_wall_changes(
                     self.maze, dynamic_walls, visited_cells, triggered_walls
                 )
                 if changes_made:
                     print(f"Episode {episode}: Maze updated due to dynamic walls.")
-                    # Reinitialize Q-values for affected states
-                    for i, j in dynamic_walls.values():
-                        if (i, j) in self.q_table:
-                            del self.q_table[(i, j)]
+
+                # Update griever positions
+                grievers = update_griever_positions(grievers, self.maze)
 
                 # Ensure Q-values exist for the current state
                 if state not in self.q_table:
                     self.q_table[state] = {action: 0 for action in self.actions}
 
                 action = self.choose_action(state)
-                if not self.is_valid_move(state, action):
-                    continue
-
                 next_state = self.get_next_state(state, action)
 
-                if next_state == state:  # Detect stuck state
-                    break
+                # Avoid states with grievers
+                if next_state in grievers:
+                    continue  # Retry a different action if next state is occupied by a griever
 
                 reward = self.get_reward(state, next_state)
                 self.update_q_value(state, action, reward, next_state)
@@ -173,21 +178,6 @@ class MazeRunner:
                     break
 
 
-
-    # def find_path(self):
-    #     """Find the optimal path using the learned Q-table."""
-    #     path = []
-    #     state = self.start
-    #     while state != self.goal:
-    #         path.append(state)
-    #         action = self.choose_best_action(state)  # Exploit learned Q-values
-    #         next_state = self.get_next_state(state, action)
-    #         if next_state == state:  # Stuck, no valid moves
-    #             break
-    #         state = next_state
-    #     if state == self.goal:
-    #         path.append(self.goal)
-    #     return path
     def find_path(self):
         """Find the optimal path using the learned Q-table."""
         path = []

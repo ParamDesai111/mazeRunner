@@ -2,10 +2,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors  # Import the colors module from matplotlib
 import numpy as np
-import pandas as pd
 import pygame
 import numpy as np
 import time
+import random
+from grievers import update_griever_positions
 
 # def load_maze(csv_file):
 #     """Load maze from a CSV file."""
@@ -144,16 +145,121 @@ COLORS = {
 }
 
 # Maze visualization settings
-CELL_SIZE = 30
+CELL_SIZE = 80
 MARGIN = 2
 FPS = 2  # Frames per second for animation speed
-def visualize_maze_live(maze, path, dynamic_walls=None):
+# def visualize_maze_live(maze, path, dynamic_walls=None):
+#     """
+#     Visualize the maze in real-time with images, simulating the agent's path.
+    
+#     :param maze: 2D NumPy array representing the maze.
+#     :param path: List of tuples representing the agent's path.
+#     :param dynamic_walls: Dictionary of dynamic walls (optional).
+#     """
+#     rows, cols = maze.shape
+#     window_width = cols * (CELL_SIZE + MARGIN)
+#     window_height = rows * (CELL_SIZE + MARGIN)
+
+#     # Initialize Pygame
+#     pygame.init()
+#     screen = pygame.display.set_mode((window_width, window_height))
+#     pygame.display.set_caption("Maze Runner Simulation with Images")
+#     clock = pygame.time.Clock()
+#     running = True
+
+#     # Load images
+#     agent_img = pygame.transform.scale(pygame.image.load("images/agent.png"), (CELL_SIZE, CELL_SIZE))
+#     wall_img = pygame.transform.scale(pygame.image.load("images/wall.png"), (CELL_SIZE, CELL_SIZE))
+#     griever_img = pygame.transform.scale(pygame.image.load("images/griever.png"), (CELL_SIZE, CELL_SIZE))
+#     start_img = pygame.transform.scale(pygame.image.load("images/start.png"), (CELL_SIZE, CELL_SIZE))
+#     end_img = pygame.transform.scale(pygame.image.load("images/goal.png"), (CELL_SIZE, CELL_SIZE))
+#     floor_img = pygame.transform.scale(pygame.image.load("images/start.png"), (CELL_SIZE, CELL_SIZE))
+#     path_highlight_img = pygame.transform.scale(pygame.image.load("images/path_highlight.png"), (CELL_SIZE, CELL_SIZE))
+#     dynamic_wall_img = pygame.transform.scale(pygame.image.load("images/dynamic_wall.png"), (CELL_SIZE, CELL_SIZE))
+
+#     # Mapping maze characters to images
+#     image_mapping = {
+#         'S': start_img,
+#         'E': end_img,
+#         '0': floor_img,
+#         '1': wall_img,
+#         'G': griever_img,
+#     }
+
+#     # Helper function to draw the maze
+#     def draw_maze(current_position=None, completed=False):
+#         screen.fill((0, 0, 0))  # Black background
+#         for i in range(rows):
+#             for j in range(cols):
+#                 rect = pygame.Rect(
+#                     j * (CELL_SIZE + MARGIN),
+#                     i * (CELL_SIZE + MARGIN),
+#                     CELL_SIZE,
+#                     CELL_SIZE
+#                 )
+#                 cell_type = str(maze[i, j])
+#                 image = image_mapping.get(cell_type, floor_img)  # Default to floor image
+
+#                 # # Highlight dynamic walls
+#                 # if dynamic_walls and (i, j) in [t for sublist in dynamic_walls.keys() for t in sublist]:
+#                 #     image = dynamic_wall_img
+#                 if dynamic_walls and (i, j) in dynamic_walls.keys():
+#                     image = dynamic_wall_img
+                
+#                 # Highlight the completed path
+#                 if completed and (i, j) in path:
+#                     image = path_highlight_img
+#                 elif current_position == (i, j):
+#                     image = agent_img
+                
+#                 screen.blit(image, rect.topleft)
+        
+#         pygame.display.flip()
+
+#     # Simulate the path
+#     for step, (x, y) in enumerate(path):
+#         for event in pygame.event.get():
+#             if event.type == pygame.QUIT:
+#                 running = False
+        
+#         # Check for dynamic wall triggers
+#         if dynamic_walls and (x, y) in dynamic_walls:
+#             targets = dynamic_walls[(x, y)]
+#             for tx, ty in targets:
+#                 if maze[tx, ty] == 0:  # Ensure the target is a valid cell
+#                     print(f"Dynamic wall triggered at ({tx}, {ty}).")
+#                     maze[tx, ty] = 1  # Place the wall at the target location
+#             del dynamic_walls[(x, y)]  # Remove the trigger to avoid re-triggering
+
+#         # Draw the maze with the agent's current position
+#         draw_maze(current_position=(x, y))
+#         clock.tick(FPS)  # Control animation speed
+        
+#         if not running:
+#             break
+
+#     # Highlight the entire path after completion
+#     draw_maze(completed=True)
+
+#     # Keep the window open until the user closes it
+#     while running:
+#         for event in pygame.event.get():
+#             if event.type == pygame.QUIT:
+#                 running = False
+        
+#         pygame.display.flip()
+#         clock.tick(30)  # Run at 30 FPS to minimize CPU usage
+
+#     pygame.quit()
+
+def visualize_maze_live(maze, path, dynamic_walls=None, grievers=None):
     """
-    Visualize the maze in real-time with images, simulating the agent's path.
+    Visualize the maze in real-time with images, simulating the agent's path and griever movements.
     
     :param maze: 2D NumPy array representing the maze.
     :param path: List of tuples representing the agent's path.
     :param dynamic_walls: Dictionary of dynamic walls (optional).
+    :param grievers: List of initial griever positions (optional).
     """
     rows, cols = maze.shape
     window_width = cols * (CELL_SIZE + MARGIN)
@@ -182,8 +288,26 @@ def visualize_maze_live(maze, path, dynamic_walls=None):
         'E': end_img,
         '0': floor_img,
         '1': wall_img,
-        'G': griever_img,
+        '-1': griever_img,  # Grievers are marked as -1 in the maze
     }
+
+    def move_grievers(grievers):
+        """Update grievers' positions using simple rule-based movement."""
+        new_positions = []
+        for gx, gy in grievers:
+            possible_moves = [
+                (gx + dx, gy + dy)
+                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]
+                if 0 <= gx + dx < rows and 0 <= gy + dy < cols and maze[gx + dx, gy + dy] == 0
+            ]
+            if possible_moves:
+                new_position = random.choice(possible_moves)
+                maze[gx, gy] = 0  # Clear old position
+                maze[new_position] = -1  # Mark new position
+                new_positions.append(new_position)
+            else:
+                new_positions.append((gx, gy))  # No move possible
+        return new_positions
 
     # Helper function to draw the maze
     def draw_maze(current_position=None, completed=False):
@@ -199,12 +323,10 @@ def visualize_maze_live(maze, path, dynamic_walls=None):
                 cell_type = str(maze[i, j])
                 image = image_mapping.get(cell_type, floor_img)  # Default to floor image
 
-                # # Highlight dynamic walls
-                # if dynamic_walls and (i, j) in [t for sublist in dynamic_walls.keys() for t in sublist]:
-                #     image = dynamic_wall_img
+                # Highlight dynamic walls
                 if dynamic_walls and (i, j) in dynamic_walls.keys():
                     image = dynamic_wall_img
-                
+
                 # Highlight the completed path
                 if completed and (i, j) in path:
                     image = path_highlight_img
@@ -221,6 +343,10 @@ def visualize_maze_live(maze, path, dynamic_walls=None):
             if event.type == pygame.QUIT:
                 running = False
         
+        # Move grievers
+        if grievers:
+            grievers = move_grievers(grievers)
+
         # Check for dynamic wall triggers
         if dynamic_walls and (x, y) in dynamic_walls:
             targets = dynamic_walls[(x, y)]
@@ -250,5 +376,3 @@ def visualize_maze_live(maze, path, dynamic_walls=None):
         clock.tick(30)  # Run at 30 FPS to minimize CPU usage
 
     pygame.quit()
-
-
