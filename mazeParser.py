@@ -104,7 +104,7 @@ def visualize_maze_live(maze, path, dynamic_walls=None, grievers=None):
     running = True
 
     # Load images
-    agent_img = pygame.transform.scale(pygame.image.load("images/image.png"), (CELL_SIZE, CELL_SIZE))
+    agent_img = pygame.transform.scale(pygame.image.load("images/agent.png"), (CELL_SIZE, CELL_SIZE))
     wall_img = pygame.transform.scale(pygame.image.load("images/wall.png"), (CELL_SIZE, CELL_SIZE))
     griever_img = pygame.transform.scale(pygame.image.load("images/griever.png"), (CELL_SIZE, CELL_SIZE))
     start_img = pygame.transform.scale(pygame.image.load("images/start.png"), (CELL_SIZE, CELL_SIZE))
