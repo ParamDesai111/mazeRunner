@@ -104,7 +104,7 @@ def visualize_maze_live(maze, path, dynamic_walls=None, grievers=None):
     running = True
 
     # Load images
-    agent_img = pygame.transform.scale(pygame.image.load("images/agent.png"), (CELL_SIZE, CELL_SIZE))
+    agent_img = pygame.transform.scale(pygame.image.load("images/image.png"), (CELL_SIZE, CELL_SIZE))
     wall_img = pygame.transform.scale(pygame.image.load("images/wall.png"), (CELL_SIZE, CELL_SIZE))
     griever_img = pygame.transform.scale(pygame.image.load("images/griever.png"), (CELL_SIZE, CELL_SIZE))
     start_img = pygame.transform.scale(pygame.image.load("images/start.png"), (CELL_SIZE, CELL_SIZE))
@@ -123,22 +123,26 @@ def visualize_maze_live(maze, path, dynamic_walls=None, grievers=None):
     }
 
     def move_grievers(grievers):
-        """Update grievers' positions using simple rule-based movement."""
         new_positions = []
         for gx, gy in grievers:
-            possible_moves = [
-                (gx + dx, gy + dy)
-                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]
-                if 0 <= gx + dx < rows and 0 <= gy + dy < cols and maze[gx + dx, gy + dy] == 0
-            ]
+            possible_moves = []
+            if gy > 0 and maze[gx, gy - 1] == 0:  # Check if left is walkable
+                possible_moves.append((gx, gy - 1))
+            if gy < maze.shape[1] - 1 and maze[gx, gy + 1] == 0:  # Check if right is walkable
+                possible_moves.append((gx, gy + 1))
+            
             if possible_moves:
+                # Randomly choose between left and right
                 new_position = random.choice(possible_moves)
                 maze[gx, gy] = 0  # Clear old position
-                maze[new_position] = -1  # Mark new position
+                maze[new_position] = -1  # Mark new position with griever value (-1)
                 new_positions.append(new_position)
             else:
-                new_positions.append((gx, gy))  # No move possible
+                # Stay in place if no valid moves
+                new_positions.append((gx, gy))
+        
         return new_positions
+
 
     # Helper function to draw the maze
     def draw_maze(current_position=None, completed=False, no_path=False):

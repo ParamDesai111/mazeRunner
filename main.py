@@ -71,7 +71,7 @@ class FileSelectorApp:
             dynamic_walls = load_dynamic_walls(self.dynamic_file)
             print("dynamic_walls:", dynamic_walls)
 
-            visualize_maze(maze, dynamic_walls)
+            # visualize_maze(maze, dynamic_walls)
 
             start = None
             goal = None

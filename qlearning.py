@@ -41,11 +41,11 @@ class MazeRunner:
             return (x, y)
         return state  # Return the current state if the move is invalid
 
-    def get_reward(self, state, next_state):
+    def get_reward(self, state, next_state, grievers):
         """Reward function for the agent."""
         if next_state == self.goal:
             return 100  # Reached goal
-        elif self.maze[next_state] == -1:  # Griever penalty
+        elif next_state in grievers:  # Griever penalty
             return -40
         elif self.maze[next_state] == 1:  # Wall penalty
             return -50
@@ -113,12 +113,17 @@ class MazeRunner:
 
                 action = self.choose_action(state)
                 next_state = self.get_next_state(state, action)
-
+                print('grievers:', grievers)    
+                print('next_state:', next_state)
                 # Avoid states with grievers
+                # Check if the next state has a griever
                 if next_state in grievers:
-                    continue  # Retry a different action if next state is occupied by a griever
-
-                reward = self.get_reward(state, next_state)
+                    print("Encountered a griever at:", next_state)
+                    reward = -40  # Apply a penalty for encountering a griever
+                    self.update_q_value(state, action, reward, state)  # Update Q-value to discourage this action
+                    continue  # Retry a different action
+            
+                reward = self.get_reward(state, next_state, grievers)
                 self.update_q_value(state, action, reward, next_state)
 
                 state = next_state
