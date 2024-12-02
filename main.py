@@ -96,7 +96,7 @@ class FileSelectorApp:
             print("Grievers:", grievers)
             runner = MazeRunner(maze_numeric.astype(int), start, goal)
             runner.initialize_q_table()
-            runner.train(episodes=1000, dynamic_walls=dynamic_walls, grievers=grievers)
+            runner.train(episodes=10000, dynamic_walls=dynamic_walls, grievers=grievers)
             path = runner.find_path()
             print("Path found by Q-Learning:", path)
             # Visualize the maze with the Q-Learning path
